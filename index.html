@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare AI | Intelligent Disease Prediction & Clinical Triage</title>
+    <meta name="description" content="AI-driven machine learning health platform predicting disease likelihood based on symptom profile and demographic factors with clinical precautions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+    <!-- Ambient Background Glows -->
+    <div class="bg-glow blob-1"></div>
+    <div class="bg-glow blob-2"></div>
+    <div class="bg-glow blob-3"></div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-heart-pulse pulse-anim"></i>
+                </div>
+                <span class="logo-text">MediCare <span class="accent-text">AI</span></span>
+            </div>
+
+            <div class="nav-status">
+                <span class="status-dot"></span>
+                <span class="status-text">ML Model Active (Random Forest 91.7% Acc)</span>
+            </div>
+
+            <div class="nav-actions">
+                <button id="themeToggle" class="icon-btn" title="Toggle Light/Dark Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Hero Banner -->
+        <section class="hero-section">
+            <div class="hero-badge">
+                <i class="fa-solid fa-microscope"></i> Next-Gen Clinical Intelligence
+            </div>
+            <h1 class="hero-title">Predict Health Conditions with <span class="gradient-text">Machine Learning</span></h1>
+            <p class="hero-subtitle">Select your symptoms and patient details to get instant ML disease predictions, differential confidence scores, severity triage, and specialist recommendations.</p>
+            
+            <div class="hero-stats">
+                <div class="stat-card">
+                    <span class="stat-number">25+</span>
+                    <span class="stat-label">Diseases Covered</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">40+</span>
+                    <span class="stat-label">Symptom Indicators</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">91.7%</span>
+                    <span class="stat-label">Model Accuracy</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">Instant</span>
+                    <span class="stat-label">Clinical Triage</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Assessment Container -->
+        <div class="app-grid">
+            <!-- Left Side: Interactive Input Form -->
+            <section class="card form-card" id="checkerSection">
+                <div class="card-header">
+                    <div class="step-badge">1</div>
+                    <div>
+                        <h2>Patient & Symptom Profile</h2>
+                        <p class="card-desc">Provide accurate health details for optimal model inference.</p>
+                    </div>
+                </div>
+
+                <form id="predictionForm">
+                    <!-- Demographics Section -->
+                    <div class="form-section">
+                        <h3 class="section-title"><i class="fa-solid fa-user-doctor"></i> Patient Demographics</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="ageInput">Age (Years)</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    <input type="number" id="ageInput" name="age" min="1" max="120" value="28" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <div class="gender-selector">
+                                    <label class="gender-btn active">
+                                        <input type="radio" name="gender" value="male" checked> Male
+                                    </label>
+                                    <label class="gender-btn">
+                                        <input type="radio" name="gender" value="female"> Female
+                                    </label>
+                                    <label class="gender-btn">
+                                        <input type="radio" name="gender" value="other"> Other
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="durationInput">Symptom Duration (Days)</label>
+                                <div class="input-icon-wrapper">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                    <input type="number" id="durationInput" name="duration_days" min="1" max="90" value="3" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="severitySlider">Severity Level (1 - 10): <span id="severityVal" class="severity-badge mod">5 - Moderate</span></label>
+                                <input type="range" id="severitySlider" name="severity_level" min="1" max="10" value="5" class="custom-slider">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Symptom Selector Section -->
+                    <div class="form-section">
+                        <div class="symptoms-header">
+                            <h3 class="section-title"><i class="fa-solid fa-list-check"></i> Select Symptoms</h3>
+                            <span class="selected-count" id="selectedCountBadge">0 Symptoms Selected</span>
+                        </div>
+
+                        <!-- Category Filter Tabs -->
+                        <div class="category-tabs" id="categoryTabs">
+                            <button type="button" class="tab-btn active" data-category="all">All</button>
+                            <button type="button" class="tab-btn" data-category="Respiratory">Respiratory</button>
+                            <button type="button" class="tab-btn" data-category="General">General</button>
+                            <button type="button" class="tab-btn" data-category="Neurological">Neurological</button>
+                            <button type="button" class="tab-btn" data-category="Digestive">Digestive</button>
+                            <button type="button" class="tab-btn" data-category="Musculoskeletal">Musculoskeletal</button>
+                            <button type="button" class="tab-btn" data-category="Skin & Allergies">Skin</button>
+                            <button type="button" class="tab-btn" data-category="Metabolic & Renal">Renal/Metabolic</button>
+                        </div>
+
+                        <!-- Symptom Search Bar -->
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="symptomSearch" placeholder="Search symptoms (e.g. fever, cough, chest pain, nausea)...">
+                            <button type="button" id="clearSearchBtn" class="clear-btn" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+
+                        <!-- Selected Symptoms Chips Tray -->
+                        <div class="chips-container" id="selectedChipsTray">
+                            <span class="chips-placeholder">No symptoms selected yet. Click options below to add.</span>
+                        </div>
+
+                        <!-- Symptoms Grid -->
+                        <div class="symptoms-grid" id="symptomsGrid">
+                            <!-- Dynamically populated from API -->
+                            <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> Loading Symptom Catalog...</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="predictBtn">
+                        <span><i class="fa-solid fa-wand-magic-sparkles"></i> Predict Disease & Analyze Risk</span>
+                        <div class="btn-spinner" style="display: none;"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Side: Results Dashboard -->
+            <section class="card results-card" id="resultsSection">
+                <!-- Empty Placeholder state when no prediction made -->
+                <div class="placeholder-state" id="resultsPlaceholder">
+                    <div class="placeholder-icon">
+                        <i class="fa-solid fa-file-waveform"></i>
+                    </div>
+                    <h3>Prediction Dashboard Ready</h3>
+                    <p>Select your symptoms on the left and click <strong>Predict Disease</strong> to generate full Machine Learning diagnostics.</p>
+                </div>
+
+                <!-- Active Results Content (Hidden until submit) -->
+                <div class="results-content" id="resultsContent" style="display: none;">
+                    
+                    <!-- Clinical Disclaimer Banner -->
+                    <div class="disclaimer-alert">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span><strong>Medical Disclaimer:</strong> This prediction is generated by an ML model for informational triage only. Always consult a licensed healthcare professional.</span>
+                    </div>
+
+                    <!-- Primary Diagnosis Hero Card -->
+                    <div class="primary-diagnosis-box" id="primaryCard">
+                        <div class="diagnosis-header">
+                            <div>
+                                <span class="sub-label">Primary ML Prediction</span>
+                                <h2 id="resDiseaseName" class="disease-title">--</h2>
+                            </div>
+                            <div class="triage-badge" id="resTriageBadge">--</div>
+                        </div>
+
+                        <!-- Circular gauge and breakdown -->
+                        <div class="gauge-grid">
+                            <div class="confidence-gauge">
+                                <svg class="gauge-svg" viewBox="0 0 120 120">
+                                    <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                                    <circle class="gauge-bar" id="gaugeCircle" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"></circle>
+                                </svg>
+                                <div class="gauge-text">
+                                    <span id="resConfidenceVal" class="percent-val">0%</span>
+                                    <span class="percent-label">Match Confidence</span>
+                                </div>
+                            </div>
+
+                            <div class="diagnosis-details">
+                                <p id="resDescription" class="disease-desc">--</p>
+                                <div class="specialist-badge">
+                                    <i class="fa-solid fa-user-doctor"></i> Recommended Specialist: <strong id="resSpecialist">--</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Precautions & Action Plan -->
+                    <div class="info-section">
+                        <h3 class="info-title"><i class="fa-solid fa-shield-halved"></i> Recommended Precautions & Action Steps</h3>
+                        <div class="precautions-grid" id="resPrecautions">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Emergency Red Flags -->
+                    <div class="emergency-box" id="resEmergencyBox">
+                        <i class="fa-solid fa-bell-concierge"></i>
+                        <div>
+                            <h4>Emergency Warning Indicators</h4>
+                            <p id="resEmergencyText">--</p>
+                        </div>
+                    </div>
+
+                    <!-- Differential Diagnoses Chart -->
+                    <div class="info-section">
+                        <h3 class="info-title"><i class="fa-solid fa-chart-column"></i> Differential Diagnosis Probabilities</h3>
+                        <div class="differential-list" id="resDifferentialList">
+                            <!-- Differential probability bars -->
+                        </div>
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="results-actions">
+                        <button type="button" class="btn btn-outline" id="printReportBtn">
+                            <i class="fa-solid fa-print"></i> Print Clinical Report
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="resetFormBtn">
+                            <i class="fa-solid fa-rotate-left"></i> New Assessment
+                        </button>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 MediCare AI • Intelligent Disease Prediction System. Built with Python, FastAPI & Scikit-Learn.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+
+</body>
+</html>
