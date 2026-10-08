@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allSymptoms = [];
     const selectedSymptoms = new Set();
     let currentCategoryFilter = 'all';
+    
 
     // DOM Elements
     const themeToggleBtn = document.getElementById('themeToggle');
@@ -71,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // API Base URL resolution for standalone frontend
-    const API_BASE_URL = 'http://127.0.0.1:8000';
+   const API_BASE_URL = "https://YOUR-RENDER-URL.onrender.com";
 
     const getApiUrl = (endpoint) => `${API_BASE_URL}${endpoint}`;
 
