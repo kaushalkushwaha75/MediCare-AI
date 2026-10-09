@@ -3,8 +3,57 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Comprehensive symptom fallback catalog (45 symptoms)
+    const DEFAULT_SYMPTOMS = [
+        {"id": "fever", "name": "Fever / Elevated Temperature", "category": "General"},
+        {"id": "fatigue", "name": "Fatigue / Extreme Tiredness", "category": "General"},
+        {"id": "chills", "name": "Chills / Shivering", "category": "General"},
+        {"id": "night_sweats", "name": "Night Sweats", "category": "General"},
+        {"id": "weight_loss", "name": "Unexplained Weight Loss", "category": "General"},
+        {"id": "malaise", "name": "General Malaise / Weakness", "category": "General"},
+        {"id": "swollen_lymph_nodes", "name": "Swollen Lymph Nodes", "category": "General"},
+        {"id": "cough", "name": "Persistent Cough", "category": "Respiratory"},
+        {"id": "shortness_of_breath", "name": "Shortness of Breath / Dyspnea", "category": "Respiratory"},
+        {"id": "sore_throat", "name": "Sore / Scratchy Throat", "category": "Respiratory"},
+        {"id": "runny_nose", "name": "Runny / Congested Nose", "category": "Respiratory"},
+        {"id": "chest_pain", "name": "Chest Pain / Tightness", "category": "Respiratory"},
+        {"id": "wheezing", "name": "Wheezing / Whistling Breath", "category": "Respiratory"},
+        {"id": "sneezing", "name": "Frequent Sneezing", "category": "Respiratory"},
+        {"id": "headache", "name": "Headache", "category": "Neurological"},
+        {"id": "dizziness", "name": "Dizziness / Lightheadedness", "category": "Neurological"},
+        {"id": "blurred_vision", "name": "Blurred Vision", "category": "Neurological"},
+        {"id": "stiff_neck", "name": "Stiff Neck", "category": "Neurological"},
+        {"id": "insomnia", "name": "Insomnia / Sleep Trouble", "category": "Neurological"},
+        {"id": "confusion", "name": "Mental Confusion", "category": "Neurological"},
+        {"id": "anxiety", "name": "Anxiety / Nervousness", "category": "Neurological"},
+        {"id": "nausea", "name": "Nausea", "category": "Digestive"},
+        {"id": "vomiting", "name": "Vomiting", "category": "Digestive"},
+        {"id": "diarrhea", "name": "Loose Motion / Diarrhea", "category": "Digestive"},
+        {"id": "abdominal_pain", "name": "Abdominal / Stomach Pain", "category": "Digestive"},
+        {"id": "stomach_cramps", "name": "Severe Stomach Cramps", "category": "Digestive"},
+        {"id": "indigestion", "name": "Indigestion / Dyspepsia", "category": "Digestive"},
+        {"id": "blood_in_stool", "name": "Blood in Stool", "category": "Digestive"},
+        {"id": "loss_of_appetite", "name": "Loss of Appetite", "category": "Digestive"},
+        {"id": "acid_reflux", "name": "Acid Reflux", "category": "Digestive"},
+        {"id": "heartburn", "name": "Heartburn", "category": "Digestive"},
+        {"id": "constipation", "name": "Constipation", "category": "Digestive"},
+        {"id": "bloating", "name": "Abdominal Bloating / Gas", "category": "Digestive"},
+        {"id": "joint_pain", "name": "Joint Pain", "category": "Musculoskeletal"},
+        {"id": "muscle_ache", "name": "Muscle Aches / Body Pain", "category": "Musculoskeletal"},
+        {"id": "back_pain", "name": "Back Pain", "category": "Musculoskeletal"},
+        {"id": "swollen_joints", "name": "Swollen Joints", "category": "Musculoskeletal"},
+        {"id": "skin_rash", "name": "Skin Rash / Lesions", "category": "Skin & Allergies"},
+        {"id": "itchy_eyes", "name": "Itchy / Red Eyes", "category": "Skin & Allergies"},
+        {"id": "jaundice", "name": "Yellow Skin / Eyes (Jaundice)", "category": "Skin & Allergies"},
+        {"id": "frequent_urination", "name": "Frequent Urination", "category": "Metabolic & Renal"},
+        {"id": "burning_urination", "name": "Pain / Burning Urination", "category": "Metabolic & Renal"},
+        {"id": "increased_thirst", "name": "Extreme Thirst", "category": "Metabolic & Renal"},
+        {"id": "high_blood_pressure", "name": "Elevated Blood Pressure", "category": "Metabolic & Renal"},
+        {"id": "palpitations", "name": "Heart Palpitations", "category": "Metabolic & Renal"}
+    ];
+
     // State management
-    let allSymptoms = [];
+    let allSymptoms = [...DEFAULT_SYMPTOMS];
     const selectedSymptoms = new Set();
     let currentCategoryFilter = 'all';
 
@@ -39,82 +88,99 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetFormBtn = document.getElementById('resetFormBtn');
 
     // 1. Theme Toggle Handler
-    themeToggleBtn.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        themeToggleBtn.querySelector('i').className = newTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
-    });
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            const icon = themeToggleBtn.querySelector('i');
+            if (icon) {
+                icon.className = newTheme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            }
+        });
+    }
 
     // 2. Severity Slider Feedback
-    severitySlider.addEventListener('input', (e) => {
-        const val = parseInt(e.target.value);
-        if (val <= 3) {
-            severityVal.textContent = `${val} - Mild`;
-            severityVal.className = 'severity-badge low';
-        } else if (val <= 7) {
-            severityVal.textContent = `${val} - Moderate`;
-            severityVal.className = 'severity-badge mod';
-        } else {
-            severityVal.textContent = `${val} - Severe`;
-            severityVal.className = 'severity-badge high';
-        }
-    });
+    if (severitySlider && severityVal) {
+        severitySlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            if (val <= 3) {
+                severityVal.textContent = `${val} - Mild`;
+                severityVal.className = 'severity-badge low';
+            } else if (val <= 7) {
+                severityVal.textContent = `${val} - Moderate`;
+                severityVal.className = 'severity-badge mod';
+            } else {
+                severityVal.textContent = `${val} - Severe`;
+                severityVal.className = 'severity-badge high';
+            }
+        });
+    }
 
     // 3. Gender Selector Buttons
     document.querySelectorAll('.gender-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            btn.querySelector('input').checked = true;
+            const radio = btn.querySelector('input');
+            if (radio) radio.checked = true;
         });
     });
 
-    // API Base URL resolution: works automatically in Render cloud deployment, FastAPI static serving, and local dev
-    const getBaseUrl = () => {
+    // Smart API Base URL resolution
+    const getApiEndpoints = () => {
+        const endpoints = [];
         if (window.MEDICARE_BACKEND_URL) {
-            return window.MEDICARE_BACKEND_URL.replace(/\/+$/, '');
+            endpoints.push(window.MEDICARE_BACKEND_URL.replace(/\/+$/, ''));
         }
-        const hostname = window.location.hostname;
-        const port = window.location.port;
-        if ((hostname === 'localhost' || hostname === '127.0.0.1') && port && port !== '8000') {
-            return 'http://127.0.0.1:8000';
+        // If loaded from origin with port 8000
+        if (window.location.origin && window.location.port === '8000') {
+            endpoints.push('');
         }
-        return '';
+        // Local default backend
+        endpoints.push('http://127.0.0.1:8000');
+        endpoints.push('http://localhost:8000');
+        endpoints.push('');
+        return [...new Set(endpoints)];
     };
 
-    const API_BASE_URL = getBaseUrl();
-    const getApiUrl = (endpoint) => `${API_BASE_URL}${endpoint}`;
-
-    // 4. Fetch Symptom Catalog from Backend API
+    // 4. Fetch Symptom Catalog from Backend API (with fallback)
     async function fetchSymptoms() {
-        try {
-            const res = await fetch(getApiUrl('/api/symptoms'));
+        const candidateHosts = getApiEndpoints();
+        let loaded = false;
 
-            if (!res.ok) {
-                throw new Error(`HTTP error ${res.status}`);
+        for (const host of candidateHosts) {
+            try {
+                const url = `${host}/api/symptoms`;
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const res = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.symptoms && data.symptoms.length > 0) {
+                        allSymptoms = data.symptoms;
+                        loaded = true;
+                        break;
+                    }
+                }
+            } catch (e) {
+                // Try next endpoint
             }
-
-            const data = await res.json();
-
-            allSymptoms = data.symptoms || [];
-            renderSymptoms();
-
-        } catch (err) {
-            console.error('Error fetching symptoms:', err);
-
-            symptomsGrid.innerHTML = `
-                <div class="error-msg">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <strong>Unable to connect to MediCare AI Backend API</strong><br>
-                    <span>Please ensure the backend service is running and accessible.</span>
-                </div>`;
         }
+
+        if (!loaded) {
+            allSymptoms = [...DEFAULT_SYMPTOMS];
+        }
+
+        renderSymptoms();
     }
 
     // 5. Render Symptoms Grid based on Category & Search filter
     function renderSymptoms() {
-        const searchQuery = symptomSearch.value.toLowerCase().trim();
+        if (!symptomsGrid) return;
+        const searchQuery = (symptomSearch ? symptomSearch.value : '').toLowerCase().trim();
         symptomsGrid.innerHTML = '';
 
         const filtered = allSymptoms.filter(sym => {
@@ -153,7 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. Update Selected Symptoms Chips & Counters
     function updateSelectedState() {
-        selectedCountBadge.textContent = `${selectedSymptoms.size} Symptom${selectedSymptoms.size === 1 ? '' : 's'} Selected`;
+        if (selectedCountBadge) {
+            selectedCountBadge.textContent = `${selectedSymptoms.size} Symptom${selectedSymptoms.size === 1 ? '' : 's'} Selected`;
+        }
+        if (!selectedChipsTray) return;
         selectedChipsTray.innerHTML = '';
 
         if (selectedSymptoms.size === 0) {
@@ -181,160 +250,211 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 7. Category Filter Tabs Listener
-    categoryTabs.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            categoryTabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentCategoryFilter = btn.getAttribute('data-category');
-            renderSymptoms();
+    if (categoryTabs) {
+        categoryTabs.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryTabs.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCategoryFilter = btn.getAttribute('data-category');
+                renderSymptoms();
+            });
         });
-    });
+    }
 
     // 8. Search Bar Listener
-    symptomSearch.addEventListener('input', () => {
-        clearSearchBtn.style.display = symptomSearch.value ? 'block' : 'none';
-        renderSymptoms();
-    });
+    if (symptomSearch && clearSearchBtn) {
+        symptomSearch.addEventListener('input', () => {
+            clearSearchBtn.style.display = symptomSearch.value ? 'block' : 'none';
+            renderSymptoms();
+        });
 
-    clearSearchBtn.addEventListener('click', () => {
-        symptomSearch.value = '';
-        clearSearchBtn.style.display = 'none';
-        renderSymptoms();
-    });
+        clearSearchBtn.addEventListener('click', () => {
+            symptomSearch.value = '';
+            clearSearchBtn.style.display = 'none';
+            renderSymptoms();
+        });
+    }
 
     // 9. Form Submission & Predict API Call
-    predictionForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    if (predictionForm) {
+        predictionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        if (selectedSymptoms.size === 0) {
-            alert('Please select at least 1 symptom to run disease prediction.');
-            return;
-        }
-
-        const age = parseInt(document.getElementById('ageInput').value) || 28;
-        const gender = document.querySelector('input[name="gender"]:checked').value;
-        const duration_days = parseInt(document.getElementById('durationInput').value) || 3;
-        const severity_level = parseInt(severitySlider.value) || 5;
-
-        const payload = {
-            age,
-            gender,
-            duration_days,
-            severity_level,
-            symptoms: Array.from(selectedSymptoms)
-        };
-
-        // Loading state UI
-        predictBtn.disabled = true;
-        predictBtn.querySelector('span').style.display = 'none';
-        predictBtn.querySelector('.btn-spinner').style.display = 'block';
-
-        try {
-            const res = await fetch(getApiUrl('/api/predict'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.detail || `Server error (${res.status})`);
+            if (selectedSymptoms.size === 0) {
+                alert('Please select at least 1 symptom to run disease prediction.');
+                return;
             }
 
-            const data = await res.json();
-            renderPredictionResults(data);
+            const ageInput = document.getElementById('ageInput');
+            const durationInput = document.getElementById('durationInput');
+            const genderRadio = document.querySelector('input[name="gender"]:checked');
 
-        } catch (err) {
-            alert(`Error: ${err.message}`);
-        } finally {
-            predictBtn.disabled = false;
-            predictBtn.querySelector('span').style.display = 'inline-flex';
-            predictBtn.querySelector('.btn-spinner').style.display = 'none';
-        }
-    });
+            const age = ageInput ? parseInt(ageInput.value) || 28 : 28;
+            const gender = genderRadio ? genderRadio.value : 'other';
+            const duration_days = durationInput ? parseInt(durationInput.value) || 3 : 3;
+            const severity_level = severitySlider ? parseInt(severitySlider.value) || 5 : 5;
+
+            const payload = {
+                age,
+                gender,
+                duration_days,
+                severity_level,
+                symptoms: Array.from(selectedSymptoms)
+            };
+
+            // Loading state UI
+            if (predictBtn) {
+                predictBtn.disabled = true;
+                const span = predictBtn.querySelector('span');
+                const spinner = predictBtn.querySelector('.btn-spinner');
+                if (span) span.style.display = 'none';
+                if (spinner) spinner.style.display = 'block';
+            }
+
+            let resultData = null;
+            let lastError = null;
+            const candidateHosts = getApiEndpoints();
+
+            for (const host of candidateHosts) {
+                try {
+                    const url = `${host}/api/predict`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        resultData = await res.json();
+                        break;
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        lastError = err.detail || `Server error (${res.status})`;
+                    }
+                } catch (err) {
+                    lastError = err.message;
+                }
+            }
+
+            if (predictBtn) {
+                predictBtn.disabled = false;
+                const span = predictBtn.querySelector('span');
+                const spinner = predictBtn.querySelector('.btn-spinner');
+                if (span) span.style.display = 'inline-flex';
+                if (spinner) spinner.style.display = 'none';
+            }
+
+            if (resultData) {
+                renderPredictionResults(resultData);
+            } else {
+                alert(`Could not connect to FastAPI server (http://127.0.0.1:8000). Please start the backend with: python app.py\n\nDetails: ${lastError || 'Connection refused'}`);
+            }
+        });
+    }
 
     // 10. Render Prediction Results in Dashboard
     function renderPredictionResults(data) {
+        if (!resultsPlaceholder || !resultsContent) return;
         resultsPlaceholder.style.display = 'none';
         resultsContent.style.display = 'block';
 
         const primary = data.primary_diagnosis;
 
         // Disease Name & Triage Badge
-        resDiseaseName.textContent = primary.name;
-        resTriageBadge.textContent = `${primary.triage_severity} Severity`;
-        resTriageBadge.className = `triage-badge ${primary.triage_severity}`;
+        if (resDiseaseName) resDiseaseName.textContent = primary.name;
+        if (resTriageBadge) {
+            resTriageBadge.textContent = `${primary.triage_severity} Severity`;
+            resTriageBadge.className = `triage-badge ${primary.triage_severity}`;
+        }
 
         // Confidence gauge SVG calculation (Circumference = 2 * PI * r = 2 * 3.14159 * 50 = 314)
         const confidence = primary.confidence;
-        resConfidenceVal.textContent = `${confidence}%`;
-        const offset = 314 - (314 * (confidence / 100));
-        gaugeCircle.style.strokeDashoffset = offset;
+        if (resConfidenceVal) resConfidenceVal.textContent = `${confidence}%`;
+        if (gaugeCircle) {
+            const offset = 314 - (314 * (confidence / 100));
+            gaugeCircle.style.strokeDashoffset = offset;
+        }
 
         // Description & Specialist
-        resDescription.textContent = primary.description;
-        resSpecialist.textContent = primary.recommended_specialist;
+        if (resDescription) resDescription.textContent = primary.description;
+        if (resSpecialist) resSpecialist.textContent = primary.recommended_specialist;
 
         // Precautions
-        resPrecautions.innerHTML = '';
-        (primary.precautions || []).forEach(prec => {
-            const precCard = document.createElement('div');
-            precCard.className = 'precaution-card';
-            precCard.innerHTML = `
-                <i class="fa-solid fa-circle-check"></i>
-                <span>${prec}</span>
-            `;
-            resPrecautions.appendChild(precCard);
-        });
+        if (resPrecautions) {
+            resPrecautions.innerHTML = '';
+            (primary.precautions || []).forEach(prec => {
+                const precCard = document.createElement('div');
+                precCard.className = 'precaution-card';
+                precCard.innerHTML = `
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>${prec}</span>
+                `;
+                resPrecautions.appendChild(precCard);
+            });
+        }
 
         // Emergency Text
-        resEmergencyText.textContent = primary.emergency_warning || "Persistent severe pain, difficulty breathing, or high fever.";
+        if (resEmergencyText) {
+            resEmergencyText.textContent = primary.emergency_warning || "Persistent severe pain, difficulty breathing, or high fever.";
+        }
 
         // Differential Diagnoses Horizontal Bars
-        resDifferentialList.innerHTML = '';
-        (data.differential_diagnoses || []).forEach(diff => {
-            const item = document.createElement('div');
-            item.className = 'diff-item';
-            item.innerHTML = `
-                <div class="diff-info">
-                    <span>${diff.disease}</span>
-                    <span>${diff.confidence_percent}%</span>
-                </div>
-                <div class="diff-bar-bg">
-                    <div class="diff-bar-fill" style="width: 0%;"></div>
-                </div>
-            `;
-            resDifferentialList.appendChild(item);
+        if (resDifferentialList) {
+            resDifferentialList.innerHTML = '';
+            (data.differential_diagnoses || []).forEach(diff => {
+                const item = document.createElement('div');
+                item.className = 'diff-item';
+                item.innerHTML = `
+                    <div class="diff-info">
+                        <span>${diff.disease}</span>
+                        <span>${diff.confidence_percent}%</span>
+                    </div>
+                    <div class="diff-bar-bg">
+                        <div class="diff-bar-fill" style="width: 0%;"></div>
+                    </div>
+                `;
+                resDifferentialList.appendChild(item);
 
-            // Animate bar width
-            setTimeout(() => {
-                item.querySelector('.diff-bar-fill').style.width = `${diff.confidence_percent}%`;
-            }, 100);
-        });
+                // Animate bar width
+                setTimeout(() => {
+                    const fill = item.querySelector('.diff-bar-fill');
+                    if (fill) fill.style.width = `${diff.confidence_percent}%`;
+                }, 100);
+            });
+        }
 
         // Smooth scroll to results
-        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        const resSec = document.getElementById('resultsSection');
+        if (resSec) resSec.scrollIntoView({ behavior: 'smooth' });
     }
 
     // 11. Print Clinical Report Button
-    printReportBtn.addEventListener('click', () => {
-        window.print();
-    });
+    if (printReportBtn) {
+        printReportBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
 
     // 12. Reset Form Button
-    resetFormBtn.addEventListener('click', () => {
-        selectedSymptoms.clear();
-        updateSelectedState();
-        renderSymptoms();
-        resultsContent.style.display = 'none';
-        resultsPlaceholder.style.display = 'block';
-        predictionForm.reset();
-        severitySlider.value = 5;
-        severityVal.textContent = '5 - Moderate';
-        severityVal.className = 'severity-badge mod';
-        document.getElementById('checkerSection').scrollIntoView({ behavior: 'smooth' });
-    });
+    if (resetFormBtn) {
+        resetFormBtn.addEventListener('click', () => {
+            selectedSymptoms.clear();
+            updateSelectedState();
+            renderSymptoms();
+            if (resultsContent) resultsContent.style.display = 'none';
+            if (resultsPlaceholder) resultsPlaceholder.style.display = 'block';
+            if (predictionForm) predictionForm.reset();
+            if (severitySlider && severityVal) {
+                severitySlider.value = 5;
+                severityVal.textContent = '5 - Moderate';
+                severityVal.className = 'severity-badge mod';
+            }
+            const checkSec = document.getElementById('checkerSection');
+            if (checkSec) checkSec.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
 
-    // Initial Fetch
+    // Initial Fetch & Render
+    renderSymptoms();
     fetchSymptoms();
 });

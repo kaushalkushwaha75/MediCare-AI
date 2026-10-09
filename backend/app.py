@@ -1,5 +1,6 @@
 import os
 import json
+import warnings
 import joblib
 import numpy as np
 from typing import List, Optional
@@ -8,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+
+# Suppress sklearn feature names warning when passing numpy arrays
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
 # Initialize FastAPI App
 app = FastAPI(
@@ -25,11 +29,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Paths
+# Robust model & data paths resolution (works whether run from root or backend)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "model", "model.joblib")
-ENCODER_PATH = os.path.join(BASE_DIR, "model", "symptom_encoder.joblib")
-INFO_PATH = os.path.join(BASE_DIR, "model", "disease_info.json")
+
+def find_artifact_path(relative_subpath: str) -> str:
+    possible_paths = [
+        os.path.join(BASE_DIR, relative_subpath),
+        os.path.join(BASE_DIR, "model", os.path.basename(relative_subpath)),
+        os.path.join(BASE_DIR, "backend", relative_subpath),
+        os.path.join(BASE_DIR, "..", "backend", relative_subpath),
+        os.path.join(BASE_DIR, "..", relative_subpath),
+        os.path.join(BASE_DIR, "..", "model", os.path.basename(relative_subpath))
+    ]
+    for path in possible_paths:
+        if os.path.exists(path):
+            return os.path.abspath(path)
+    return os.path.join(BASE_DIR, relative_subpath)
+
+MODEL_PATH = find_artifact_path(os.path.join("model", "model.joblib"))
+ENCODER_PATH = find_artifact_path(os.path.join("model", "symptom_encoder.joblib"))
+INFO_PATH = find_artifact_path(os.path.join("model", "disease_info.json"))
 
 # Global variables for model artifacts
 model = None
@@ -38,21 +57,25 @@ disease_info_db = {}
 symptom_catalog = []
 
 def load_artifacts():
-    global model, symptom_ids, disease_info_db, symptom_catalog
+    global model, symptom_ids, disease_info_db, symptom_catalog, MODEL_PATH, ENCODER_PATH, INFO_PATH
+    MODEL_PATH = find_artifact_path(os.path.join("model", "model.joblib"))
+    ENCODER_PATH = find_artifact_path(os.path.join("model", "symptom_encoder.joblib"))
+    INFO_PATH = find_artifact_path(os.path.join("model", "disease_info.json"))
+
     try:
         if os.path.exists(MODEL_PATH) and os.path.exists(ENCODER_PATH):
             model = joblib.load(MODEL_PATH)
             symptom_ids = joblib.load(ENCODER_PATH)
-            print("Successfully loaded ML Model and Symptom Encoders.")
+            print(f"Successfully loaded ML Model ({len(symptom_ids)} symptoms) from {MODEL_PATH}")
         else:
-            print("Warning: ML Model artifacts not found yet. Run train_model.py first.")
+            print(f"Warning: ML Model artifacts not found at {MODEL_PATH}")
 
         if os.path.exists(INFO_PATH):
-            with open(INFO_PATH, "r") as f:
+            with open(INFO_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 disease_info_db = data.get("diseases", {})
                 symptom_catalog = data.get("symptoms", [])
-            print("Successfully loaded Disease Info knowledgebase.")
+            print(f"Successfully loaded Disease Info knowledgebase ({len(disease_info_db)} diseases, {len(symptom_catalog)} symptoms).")
     except Exception as e:
         print(f"Error loading artifacts: {e}")
 
@@ -88,17 +111,15 @@ def predict_disease(payload: PredictRequest):
     if model is None or not symptom_ids:
         load_artifacts()
         if model is None:
-            raise HTTPException(status_code=500, detail="ML Model not available. Please train model first.")
+            raise HTTPException(status_code=500, detail="ML Model not available. Please ensure model files are present.")
 
-    # 1. Build binary feature vector with feature names matching model fitting
-    import pandas as pd
-    input_dict = {sym_id: [1 if sym_id in payload.symptoms else 0] for sym_id in symptom_ids}
+    # 1. Build binary feature vector using NumPy directly
+    input_vector = [1 if sym_id in payload.symptoms else 0 for sym_id in symptom_ids]
     
-    if sum(input_dict[sym_id][0] for sym_id in symptom_ids) == 0:
-        raise HTTPException(status_code=400, detail="Please select at least one symptom.")
+    if sum(input_vector) == 0:
+        raise HTTPException(status_code=400, detail="Please select at least one recognized symptom.")
 
-    # Convert to DataFrame with feature names
-    X_input = pd.DataFrame(input_dict)
+    X_input = np.array([input_vector], dtype=np.float32)
 
     # 2. Get class probabilities
     probabilities = model.predict_proba(X_input)[0]
@@ -108,8 +129,8 @@ def predict_disease(payload: PredictRequest):
     top_indices = np.argsort(probabilities)[::-1]
     
     predictions = []
-    for idx in top_indices[:5]: # Top 5 differential diagnoses
-        disease_name = classes[idx]
+    for idx in top_indices[:5]:  # Top 5 differential diagnoses
+        disease_name = str(classes[idx])
         prob = float(probabilities[idx])
         if prob > 0.01:
             predictions.append({
@@ -119,7 +140,7 @@ def predict_disease(payload: PredictRequest):
             })
 
     if not predictions:
-        primary_disease = classes[top_indices[0]]
+        primary_disease = str(classes[top_indices[0]])
         predictions.append({
             "disease": primary_disease,
             "confidence_percent": round(float(probabilities[top_indices[0]]) * 100, 1),
@@ -140,7 +161,6 @@ def predict_disease(payload: PredictRequest):
 
     # Adjust severity assessment based on patient factors
     triage_level = clinical_info.get("severity", "Moderate")
-    # Normalize compound values (e.g. 'Moderate to High' -> 'High', 'Low to Moderate' -> 'Moderate')
     if triage_level == "Moderate to High":
         triage_level = "High"
     elif triage_level == "Low to Moderate":
@@ -198,11 +218,20 @@ def api_index():
         }
     }
 
-# Mount static frontend if available (allows single Web Service deployment on Render)
-FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
-if os.path.exists(FRONTEND_DIR):
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
-else:
+# Mount static frontend directory
+possible_frontend_dirs = [
+    os.path.abspath(os.path.join(BASE_DIR, "..", "frontend")),
+    os.path.abspath(os.path.join(BASE_DIR, "frontend")),
+    os.path.abspath(os.path.join(BASE_DIR, ".."))
+]
+frontend_mounted = False
+for fdir in possible_frontend_dirs:
+    if os.path.exists(os.path.join(fdir, "index.html")):
+        app.mount("/", StaticFiles(directory=fdir, html=True), name="frontend")
+        frontend_mounted = True
+        break
+
+if not frontend_mounted:
     @app.get("/")
     def index():
         return {
